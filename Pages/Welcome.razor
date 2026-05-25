@@ -1,0 +1,753 @@
+@page "/"
+@inject NavigationManager Nav
+
+<div class="welcome-hero bg-grid">
+    <!-- Animated background particles -->
+    <div class="particles-bg">
+        <div class="particle p1"></div>
+        <div class="particle p2"></div>
+        <div class="particle p3"></div>
+        <div class="particle p4"></div>
+        <div class="particle p5"></div>
+    </div>
+
+    <!-- Main container -->
+    <div class="welcome-container">
+        <!-- Hero section with carousel -->
+        <div class="hero-section glass-card">
+            <!-- Carousel container -->
+            <div class="carousel-wrapper">
+                <div class="carousel" style="transform: translateX(@($"{-_carouselIndex * 100}%"));">
+                    <div class="carousel-slide">
+                        <div class="slide-content">
+                            <div class="slide-icon">💳</div>
+                            <h3>Gestión de Cuentas</h3>
+                            <p>Administra tus cuentas de ahorros, corriente y tarjetas en un solo lugar.</p>
+                        </div>
+                    </div>
+                    <div class="carousel-slide">
+                        <div class="slide-content">
+                            <div class="slide-icon">💸</div>
+                            <h3>Transferencias Rápidas</h3>
+                            <p>Realiza transferencias instantáneas entre tus cuentas o a otros usuarios.</p>
+                        </div>
+                    </div>
+                    <div class="carousel-slide">
+                        <div class="slide-content">
+                            <div class="slide-icon">📊</div>
+                            <h3>Historial Detallado</h3>
+                            <p>Visualiza todos tus movimientos con un historial completo y detallado.</p>
+                        </div>
+                    </div>
+                    <div class="carousel-slide">
+                        <div class="slide-content">
+                            <div class="slide-icon">🔒</div>
+                            <h3>Seguridad Premium</h3>
+                            <p>Tu dinero protegido con autenticación y encriptación de nivel bancario.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Carousel controls -->
+                <div class="carousel-controls">
+                    <button class="carousel-btn prev" @onclick="PrevSlide">❮</button>
+                    <button class="carousel-btn next" @onclick="NextSlide">❯</button>
+                </div>
+
+                <!-- Carousel indicators -->
+                <div class="carousel-dots">
+                    @for (int i = 0; i < 4; i++)
+                    {
+                        int index = i;
+                        <button class="dot @(_carouselIndex == index ? "active" : "")" 
+                                @onclick="() => _carouselIndex = index"></button>
+                    }
+                </div>
+            </div>
+
+            <!-- Divider -->
+            <div class="hero-divider"></div>
+
+            <!-- Features grid -->
+            <div class="features-grid ghost-enter ghost-enter-2">
+                <div class="feature-card">
+                    <span class="feature-icon">⚡</span>
+                    <h4>Rápido</h4>
+                    <p>Operaciones instantáneas sin demoras</p>
+                </div>
+                <div class="feature-card">
+                    <span class="feature-icon">🎯</span>
+                    <h4>Preciso</h4>
+                    <p>Control exacto de tus finanzas</p>
+                </div>
+                <div class="feature-card">
+                    <span class="feature-icon">🌐</span>
+                    <h4>Digital</h4>
+                    <p>Acceso 24/7 desde cualquier lugar</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Call to action section -->
+        <div class="cta-section glass-card ghost-enter ghost-enter-3">
+            <div class="cta-content">
+                <h2 class="ghost-title" style="font-size:2rem; margin-bottom:1rem;">
+                    Bienvenido a Banki
+                </h2>
+                <p class="ghost-subtitle" style="font-size:0.9rem; margin-bottom:2rem; color:var(--text-muted);">
+                    BANKI ES UNA BANCA DIGITAL MODERNA PARA GESTIONAR CUENTAS, TARJETAS Y MOVIMIENTOS CON FACILIDAD Y SEGURIDAD
+                </p>
+
+                <!-- Action buttons -->
+                <div class="cta-buttons">
+                    <button class="cta-btn cta-btn-primary" @onclick="GoLogin">
+                        <span class="btn-label">INICIAR SESIÓN</span>
+                        <span class="btn-arrow">→</span>
+                    </button>
+                    <button class="cta-btn cta-btn-secondary" @onclick="GoRegistro">
+                        <span class="btn-label">CREAR CUENTA</span>
+                        <span class="btn-arrow">→</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Decorative element -->
+            <div class="cta-decoration">
+                <div class="decoration-circle c1"></div>
+                <div class="decoration-circle c2"></div>
+                <div class="decoration-circle c3"></div>
+            </div>
+        </div>
+
+        <!-- Info section -->
+        <div class="info-section glass-card ghost-enter ghost-enter-4">
+            <h3 class="section-title">¿Por qué elegir Banki?</h3>
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="info-number">01</div>
+                    <h4>Interfaz Intuitiva</h4>
+                    <p>Diseño moderno y fácil de usar para todas las edades</p>
+                </div>
+                <div class="info-item">
+                    <div class="info-number">02</div>
+                    <h4>Múltiples Productos</h4>
+                    <p>Cuentas de ahorros, corrientes y tarjetas de crédito</p>
+                </div>
+                <div class="info-item">
+                    <div class="info-number">03</div>
+                    <h4>Transacciones Seguras</h4>
+                    <p>Tus datos protegidos con tecnología de encriptación</p>
+                </div>
+                <div class="info-item">
+                    <div class="info-number">04</div>
+                    <h4>Soporte 24/7</h4>
+                    <p>Atención al cliente disponible en todo momento</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer CTA -->
+        <div class="footer-cta ghost-enter ghost-enter-5">
+            <p class="footer-text">¿Listo para transformar tu experiencia bancaria?</p>
+            <button class="ghost-btn ghost-btn-primary" @onclick="GoLogin">
+                Comenzar Ahora
+            </button>
+        </div>
+
+        <!-- Contact section -->
+        <div class="contact-section glass-card ghost-enter ghost-enter-6">
+            <h3 class="section-title">Ponte en contacto</h3>
+            <div class="contact-grid">
+                <div class="contact-item">
+                    <div class="contact-icon">📞</div>
+                    <h4>Teléfono</h4>
+                    <p><a href="tel:3014642620">3014642620</a></p>
+                </div>
+                <div class="contact-item">
+                    <div class="contact-icon">📧</div>
+                    <h4>Email</h4>
+                    <p><a href="mailto:munozjose.3008@gmail.com">munozjose.3008@gmail.com</a></p>
+                </div>
+            </div>
+            <div class="contact-bottom">
+                <p class="contact-description">
+                    Si tienes preguntas, sugerencias o necesitas asistencia, no dudes en comunicarte con nuestro equipo.
+                    Estamos aquí para ayudarte con cualquier consulta relacionada con Banki.
+                </p>
+                <div class="social-links">
+                    <p class="social-label">Síguenos en redes sociales</p>
+                    <div class="social-icons">
+                        <a href="#" class="social-icon">📱</a>
+                        <a href="#" class="social-icon">💼</a>
+                        <a href="#" class="social-icon">🐦</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Welcome Hero Page */
+    .welcome-hero {
+        min-height: 100vh;
+        background: var(--gradient-dark);
+        position: relative;
+        overflow: hidden;
+        padding: 2rem 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* Particles background */
+    .particles-bg {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+    }
+
+    .particles-bg .particle {
+        position: absolute;
+        width: 4px;
+        height: 4px;
+        background: var(--accent-cyan);
+        border-radius: 50%;
+        opacity: 0.3;
+        animation: floatParticle 20s linear infinite;
+    }
+
+    .particles-bg .p1 { top: 10%; left: 10%; animation-duration: 20s; }
+    .particles-bg .p2 { top: 30%; left: 80%; animation-duration: 25s; animation-delay: -5s; }
+    .particles-bg .p3 { top: 60%; left: 15%; animation-duration: 22s; animation-delay: -10s; }
+    .particles-bg .p4 { top: 70%; left: 85%; animation-duration: 28s; animation-delay: -15s; }
+    .particles-bg .p5 { top: 40%; left: 50%; animation-duration: 24s; animation-delay: -20s; }
+
+    @@keyframes floatParticle {
+        0% { transform: translateY(0) translateX(0) scale(1); opacity: 0; }
+        10% { opacity: 0.5; }
+        90% { opacity: 0.5; }
+        100% { transform: translateY(-100vh) translateX(100px) scale(0); opacity: 0; }
+    }
+
+    .welcome-container {
+        max-width: 1200px;
+        width: 100%;
+        z-index: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+    }
+
+    /* Hero section with carousel */
+    .hero-section {
+        padding: 2.5rem;
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--border-ghost);
+        animation: ghostFadeIn 0.8s ease-out;
+    }
+
+    .carousel-wrapper {
+        position: relative;
+        width: 100%;
+        margin-bottom: 2rem;
+        background: rgba(10, 11, 16, 0.5);
+        border-radius: var(--radius-md);
+        overflow: hidden;
+        height: 280px;
+        border: 1px solid var(--border-ghost);
+    }
+
+    .carousel {
+        display: flex;
+        transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+        height: 100%;
+    }
+
+    .carousel-slide {
+        flex: 0 0 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+    }
+
+    .slide-content {
+        text-align: center;
+        color: var(--text-primary);
+    }
+
+    .slide-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        display: block;
+        animation: floatUp 0.8s ease-out;
+    }
+
+    .slide-content h3 {
+        font-family: var(--font-mono);
+        font-size: 1.4rem;
+        margin-bottom: 0.5rem;
+        background: var(--gradient-main);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .slide-content p {
+        color: var(--text-muted);
+        font-size: 0.9rem;
+        max-width: 400px;
+    }
+
+    /* Carousel controls */
+    .carousel-controls {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0 1rem;
+        pointer-events: none;
+    }
+
+    .carousel-btn {
+        width: 45px;
+        height: 45px;
+        background: rgba(94, 234, 212, 0.1);
+        border: 1px solid var(--border-ghost);
+        color: var(--accent-cyan);
+        border-radius: var(--radius-sm);
+        cursor: pointer;
+        font-size: 1.2rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: var(--transition-smooth);
+        pointer-events: all;
+    }
+
+    .carousel-btn:hover {
+        background: rgba(94, 234, 212, 0.2);
+        border-color: var(--accent-cyan);
+        box-shadow: 0 0 15px rgba(94, 234, 212, 0.2);
+    }
+
+    /* Carousel dots/indicators */
+    .carousel-dots {
+        position: absolute;
+        bottom: 1rem;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 0.5rem;
+        z-index: 10;
+    }
+
+    .dot {
+        width: 10px;
+        height: 10px;
+        background: rgba(94, 234, 212, 0.2);
+        border: 1px solid var(--border-ghost);
+        border-radius: 50%;
+        cursor: pointer;
+        transition: var(--transition-smooth);
+    }
+
+    .dot.active {
+        background: var(--accent-cyan);
+        border-color: var(--accent-cyan);
+        box-shadow: 0 0 10px rgba(94, 234, 212, 0.4);
+    }
+
+    .dot:hover {
+        background: rgba(94, 234, 212, 0.4);
+    }
+
+    /* Hero divider */
+    .hero-divider {
+        height: 1px;
+        background: linear-gradient(90deg, transparent, var(--border-ghost), transparent);
+        margin: 2rem 0;
+    }
+
+    /* Features grid */
+    .features-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .feature-card {
+        padding: 1.5rem;
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid var(--border-ghost);
+        border-radius: var(--radius-md);
+        text-align: center;
+        transition: var(--transition-smooth);
+    }
+
+    .feature-card:hover {
+        background: rgba(94, 234, 212, 0.05);
+        border-color: var(--accent-cyan);
+        transform: translateY(-4px);
+    }
+
+    .feature-icon {
+        display: block;
+        font-size: 2.2rem;
+        margin-bottom: 0.8rem;
+    }
+
+    .feature-card h4 {
+        font-family: var(--font-mono);
+        font-size: 1rem;
+        margin-bottom: 0.4rem;
+        color: var(--accent-cyan);
+    }
+
+    .feature-card p {
+        color: var(--text-muted);
+        font-size: 0.85rem;
+    }
+
+    /* CTA Section */
+    .cta-section {
+        padding: 3rem 2.5rem;
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--border-ghost);
+        position: relative;
+        overflow: hidden;
+        background: linear-gradient(135deg, rgba(94, 234, 212, 0.05) 0%, rgba(167, 139, 250, 0.05) 100%);
+    }
+
+    .cta-content {
+        position: relative;
+        z-index: 2;
+        max-width: 600px;
+    }
+
+    .cta-buttons {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .cta-btn {
+        padding: 1rem 2rem;
+        border: none;
+        border-radius: var(--radius-md);
+        font-family: var(--font-mono);
+        font-weight: 600;
+        font-size: 0.9rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        transition: var(--transition-smooth);
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+    }
+
+    .cta-btn-primary {
+        background: linear-gradient(135deg, var(--accent-cyan) 0%, var(--accent-blue) 50%, var(--accent-purple) 100%);
+        color: #071018;
+        box-shadow: 0 8px 24px rgba(94, 234, 212, 0.2);
+    }
+
+    .cta-btn-primary:hover {
+        transform: translateX(4px);
+        box-shadow: 0 12px 32px rgba(94, 234, 212, 0.3);
+    }
+
+    .cta-btn-secondary {
+        background: transparent;
+        border: 2px solid var(--accent-cyan);
+        color: var(--accent-cyan);
+    }
+
+    .cta-btn-secondary:hover {
+        background: rgba(94, 234, 212, 0.1);
+        transform: translateX(4px);
+    }
+
+    .btn-label {
+        flex: 1;
+    }
+
+    .btn-arrow {
+        margin-left: 1rem;
+        font-size: 1.2rem;
+    }
+
+    /* Decorative circles */
+    .cta-decoration {
+        position: absolute;
+        inset: 0;
+        overflow: hidden;
+        opacity: 0.3;
+    }
+
+    .decoration-circle {
+        position: absolute;
+        border: 2px solid var(--accent-cyan);
+        border-radius: 50%;
+        animation: rotateSlow 20s linear infinite;
+    }
+
+    .c1 {
+        width: 200px;
+        height: 200px;
+        top: -100px;
+        right: -50px;
+    }
+
+    .c2 {
+        width: 150px;
+        height: 150px;
+        bottom: 20%;
+        left: -75px;
+        animation-duration: 25s;
+        animation-direction: reverse;
+    }
+
+    .c3 {
+        width: 100px;
+        height: 100px;
+        bottom: 10%;
+        right: 10%;
+        animation-duration: 30s;
+    }
+
+    @@keyframes rotateSlow {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    /* Info section */
+    .info-section {
+        padding: 3rem 2.5rem;
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--border-ghost);
+    }
+
+    .section-title {
+        font-family: var(--font-mono);
+        font-size: 1.4rem;
+        margin-bottom: 2rem;
+        background: var(--gradient-main);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 2rem;
+    }
+
+    .info-item {
+        padding: 1.5rem;
+        background: rgba(255, 255, 255, 0.01);
+        border: 1px solid var(--border-ghost);
+        border-radius: var(--radius-md);
+        position: relative;
+    }
+
+    .info-item:hover {
+        border-color: var(--accent-cyan);
+    }
+
+    .info-number {
+        font-family: var(--font-mono);
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--accent-cyan);
+        margin-bottom: 0.5rem;
+        opacity: 0.5;
+    }
+
+    .info-item h4 {
+        font-family: var(--font-mono);
+        color: var(--text-primary);
+        margin-bottom: 0.4rem;
+    }
+
+    .info-item p {
+        color: var(--text-muted);
+        font-size: 0.85rem;
+    }
+
+    /* Contact section */
+    .contact-section {
+        padding: 3rem 2.5rem;
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--border-ghost);
+    }
+
+    .contact-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 2rem;
+        margin-bottom: 2.5rem;
+    }
+
+    .contact-item {
+        padding: 2rem;
+        background: linear-gradient(135deg, rgba(94, 234, 212, 0.08) 0%, rgba(167, 139, 250, 0.08) 100%);
+        border: 1px solid var(--border-ghost);
+        border-radius: var(--radius-md);
+        text-align: center;
+        transition: var(--transition-smooth);
+    }
+
+    .contact-item:hover {
+        border-color: var(--accent-cyan);
+        background: linear-gradient(135deg, rgba(94, 234, 212, 0.15) 0%, rgba(167, 139, 250, 0.15) 100%);
+        transform: translateY(-4px);
+        box-shadow: 0 8px 24px rgba(94, 234, 212, 0.1);
+    }
+
+    .contact-icon {
+        font-size: 2.5rem;
+        display: block;
+        margin-bottom: 1rem;
+    }
+
+    .contact-item h4 {
+        font-family: var(--font-mono);
+        font-size: 1.1rem;
+        margin-bottom: 0.8rem;
+        color: var(--accent-cyan);
+    }
+
+    .contact-item p {
+        color: var(--text-primary);
+        font-size: 1rem;
+    }
+
+    .contact-item a {
+        color: var(--accent-cyan);
+        text-decoration: none;
+        transition: var(--transition-smooth);
+        font-weight: 500;
+    }
+
+    .contact-item a:hover {
+        color: var(--accent-blue);
+        text-decoration: underline;
+    }
+
+    .contact-bottom {
+        padding-top: 2rem;
+        border-top: 1px solid var(--border-ghost);
+    }
+
+    .contact-description {
+        color: var(--text-muted);
+        font-size: 0.9rem;
+        line-height: 1.6;
+        margin-bottom: 2rem;
+        max-width: 600px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .social-links {
+        text-align: center;
+    }
+
+    .social-label {
+        font-family: var(--font-mono);
+        color: var(--text-muted);
+        font-size: 0.85rem;
+        margin-bottom: 1rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .social-icons {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+    }
+
+    .social-icon {
+        width: 48px;
+        height: 48px;
+        background: rgba(94, 234, 212, 0.1);
+        border: 1px solid var(--border-ghost);
+        border-radius: var(--radius-sm);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        cursor: pointer;
+        transition: var(--transition-smooth);
+        text-decoration: none;
+    }
+
+    .social-icon:hover {
+        background: rgba(94, 234, 212, 0.2);
+        border-color: var(--accent-cyan);
+        transform: translateY(-4px);
+        box-shadow: 0 8px 16px rgba(94, 234, 212, 0.15);
+    }
+
+    /* Footer CTA */
+    .footer-cta {
+        text-align: center;
+        padding: 2rem;
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid var(--border-ghost);
+        border-radius: var(--radius-lg);
+    }
+
+    .footer-text {
+        font-family: var(--font-mono);
+        color: var(--text-muted);
+        margin-bottom: 1rem;
+        font-size: 0.95rem;
+    }
+
+    /* Responsive */
+    @@media (max-width: 768px) {
+        .cta-section { padding: 2rem; }
+        .hero-section { padding: 1.5rem; }
+
+        .carousel-wrapper {
+            height: 220px;
+        }
+
+        .cta-btn {
+            padding: 0.8rem 1.5rem;
+            font-size: 0.85rem;
+        }
+
+        .features-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .info-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+</style>
+
+@code {
+    private int _carouselIndex = 0;
+
+    private void NextSlide()
+    {
+        _carouselIndex = (_carouselIndex + 1) % 4;
+    }
+
+    private void PrevSlide()
+    {
+        _carouselIndex = (_carouselIndex - 1 + 4) % 4;
+    }
+
+    private void GoLogin() => Nav.NavigateTo("/login");
+    private void GoRegistro() => Nav.NavigateTo("/registro");
+}

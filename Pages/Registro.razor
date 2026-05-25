@@ -1,0 +1,199 @@
+@page "/registro"
+@using BancoApp.Services
+@inject BancoService Banco
+@inject NavigationManager Nav
+
+<div class="ghost-login-page bg-grid">
+    <div class="particles">
+        <div class="particle p1"></div>
+        <div class="particle p2"></div>
+        <div class="particle p3"></div>
+    </div>
+
+    <div class="ghost-login-wrapper">
+        <!-- Terminal header -->
+        <div class="terminal-header ghost-enter ghost-enter-1">
+            <span class="terminal-dot red"></span>
+            <span class="terminal-dot yellow"></span>
+            <span class="terminal-dot green"></span>
+            <span class="terminal-path">~/banco/auth/register</span>
+        </div>
+
+        <div class="ghost-login-card glass-card ghost-enter ghost-enter-2">
+            <div class="login-header">
+                <div class="ghost-logo">
+                    <span class="logo-icon">👤</span>
+                    <div class="logo-ring"></div>
+                </div>
+                <h1 class="ghost-title">Registro</h1>
+                <p class="ghost-subtitle">
+                    <span class="ghost-typewriter">crear nueva cuenta</span>
+                </p>
+            </div>
+
+            <div class="ghost-divider"></div>
+
+            @if (!string.IsNullOrEmpty(_error))
+            {
+                <div class="ghost-alert ghost-alert-error">
+                    <span class="alert-icon">⚠</span> @_error
+                </div>
+            }
+
+            <div class="login-form ghost-enter ghost-enter-3">
+                <div class="ghost-field">
+                    <label class="ghost-label">▸ identificación</label>
+                    <input @bind="_id" type="text" placeholder="cédula o documento..." class="ghost-input" id="reg-id" />
+                </div>
+                <div class="ghost-field">
+                    <label class="ghost-label">▸ nombre completo</label>
+                    <input @bind="_nombre" type="text" placeholder="tu nombre..." class="ghost-input" id="reg-nombre" />
+                </div>
+                <div class="ghost-field">
+                    <label class="ghost-label">▸ celular</label>
+                    <input @bind="_celular" type="text" placeholder="3001234567..." class="ghost-input" id="reg-celular" />
+                </div>
+                <div class="ghost-field">
+                    <label class="ghost-label">▸ usuario</label>
+                    <input @bind="_usuario" type="text" placeholder="elige un usuario..." class="ghost-input" id="reg-usuario" />
+                </div>
+                <div class="ghost-field">
+                    <label class="ghost-label">▸ contraseña</label>
+                    <input @bind="_pass" type="password" placeholder="••••••••" class="ghost-input" id="reg-pass" />
+                </div>
+            </div>
+
+            <button class="ghost-btn ghost-btn-primary ghost-enter ghost-enter-5" @onclick="Registrar" id="btn-registrar">
+                <span class="btn-text">▶ Crear Cuenta</span>
+            </button>
+
+            <div class="login-footer ghost-enter ghost-enter-6">
+                <a class="ghost-link" @onclick='() => Nav.NavigateTo("/")'>← volver_al_login()</a>
+            </div>
+
+            <div class="status-bar ghost-enter ghost-enter-7">
+                <span class="status-dot online"></span>
+                <span class="status-text">registro disponible</span>
+                <span class="status-version">v2.0.26</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .ghost-login-page {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--gradient-dark);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .particles { position: absolute; inset: 0; pointer-events: none; }
+    .particle {
+        position: absolute; width: 2px; height: 2px;
+        background: var(--accent-purple); border-radius: 50%;
+        opacity: 0.4; animation: floatParticle 15s linear infinite;
+    }
+    .p1 { top: 30%; left: 15%; animation-duration: 14s; }
+    .p2 { top: 70%; left: 75%; animation-duration: 18s; animation-delay: -6s; }
+    .p3 { top: 50%; left: 40%; animation-duration: 16s; animation-delay: -3s; }
+
+    @@keyframes floatParticle {
+        0% { transform: translateY(0) translateX(0) scale(1); opacity: 0; }
+        10% { opacity: 0.5; }
+        90% { opacity: 0.5; }
+        100% { transform: translateY(-100vh) translateX(50px) scale(0.5); opacity: 0; }
+    }
+
+    .ghost-login-wrapper {
+        width: 100%; max-width: 420px; padding: 1.5rem; z-index: 1;
+    }
+
+    .terminal-header {
+        display: flex; align-items: center; gap: 6px;
+        padding: 0.6rem 1rem;
+        background: rgba(18, 20, 32, 0.95);
+        border: 1px solid var(--border-ghost); border-bottom: none;
+        border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    }
+    .terminal-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .terminal-dot.red { background: #ff5f57; }
+    .terminal-dot.yellow { background: #febc2e; }
+    .terminal-dot.green { background: #28c840; }
+    .terminal-path {
+        margin-left: auto; font-family: var(--font-mono);
+        font-size: 0.7rem; color: var(--text-muted); letter-spacing: 0.5px;
+    }
+
+    .ghost-login-card {
+        padding: 2.5rem;
+        border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+    }
+
+    .login-header { text-align: center; margin-bottom: 1.5rem; }
+    .ghost-logo {
+        position: relative; display: inline-flex;
+        align-items: center; justify-content: center;
+        width: 70px; height: 70px; margin-bottom: 1rem;
+    }
+    .logo-icon {
+        font-size: 2.2rem; z-index: 1;
+        filter: drop-shadow(0 0 10px rgba(167, 139, 250, 0.5));
+    }
+    .logo-ring {
+        position: absolute; inset: 0;
+        border: 2px solid rgba(167, 139, 250, 0.15); border-radius: 50%;
+        animation: borderGlow 3s ease-in-out infinite;
+    }
+    .login-header .ghost-title { font-size: 2.2rem; margin-bottom: 0.3rem; }
+    .login-header .ghost-subtitle { min-height: 1.2rem; }
+
+    .login-form {
+        display: flex; flex-direction: column;
+        gap: 0.85rem; margin-bottom: 1.5rem;
+    }
+    .ghost-field { display: flex; flex-direction: column; }
+
+    .login-footer {
+        text-align: center; margin-top: 1.5rem;
+        font-family: var(--font-mono); font-size: 0.85rem;
+    }
+
+    .status-bar {
+        display: flex; align-items: center; gap: 0.5rem;
+        margin-top: 2rem; padding-top: 1rem;
+        border-top: 1px solid var(--border-ghost);
+        font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-muted);
+    }
+    .status-dot { width: 6px; height: 6px; border-radius: 50%; }
+    .status-dot.online {
+        background: var(--accent-green);
+        box-shadow: 0 0 8px rgba(52, 211, 153, 0.5);
+        animation: pulse 2s ease-in-out infinite;
+    }
+    .status-version { margin-left: auto; }
+</style>
+
+@code {
+    private string _id = "", _nombre = "", _celular = "", _usuario = "", _pass = "", _error = "";
+
+    private void Registrar()
+    {
+        _error = "";
+        if (string.IsNullOrWhiteSpace(_id) || string.IsNullOrWhiteSpace(_nombre) ||
+            string.IsNullOrWhiteSpace(_usuario) || string.IsNullOrWhiteSpace(_pass))
+        {
+            _error = "Todos los campos son obligatorios.";
+            return;
+        }
+        try
+        {
+            Banco.Registrar(_id, _nombre, _celular, _usuario, _pass);
+            Nav.NavigateTo("/");
+        }
+        catch (Exception ex) { _error = ex.Message; }
+    }
+}

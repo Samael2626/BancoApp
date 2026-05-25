@@ -1,0 +1,813 @@
+@page "/dashboard"
+@using BancoApp.Services
+@using BancoApp.Models
+@inject BancoService Banco
+@inject NavigationManager Nav
+
+@if (!Banco.Autenticado) { Nav.NavigateTo("/"); return; }
+
+<div class="ghost-dashboard bg-grid">
+    <!-- ═══ Top Bar ═══ -->
+    <header class="ghost-topbar">
+        <div class="topbar-left">
+            <span class="topbar-logo">⚡</span>
+            <span class="topbar-brand">Banki</span>
+            <span class="topbar-separator">|</span>
+            <span class="topbar-path ghost-typewriter">~/dashboard</span>
+        </div>
+        <div class="topbar-right">
+            <div class="user-badge">
+                <span class="user-avatar">👤</span>
+                <span class="user-name">@Banco.ClienteActual!.NombreCompleto</span>
+            </div>
+            <button class="ghost-btn-icon" @onclick="Logout" id="btn-logout" title="Cerrar sesión">
+                ⏻
+            </button>
+        </div>
+    </header>
+
+    <div class="ghost-content">
+        <!-- ═══ Welcome Banner ═══ -->
+        <div class="welcome-banner ghost-enter ghost-enter-1">
+            <div class="welcome-text">
+                <h1 class="ghost-title" style="font-size:1.6rem;">Bienvenido, @Banco.ClienteActual!.NombreCompleto.Split(' ')[0]</h1>
+                <p class="ghost-subtitle" style="letter-spacing:1.5px;">gestiona tus productos financieros</p>
+            </div>
+            <div class="welcome-stats">
+                <div class="stat-item">
+                    <span class="stat-value">@Banco.ClienteActual!.Cuentas.Count</span>
+                    <span class="stat-label">productos</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value">$@GetTotalBalance()</span>
+                    <span class="stat-label">balance total</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══ Cuentas Grid ═══ -->
+        <div class="section-header ghost-enter ghost-enter-2">
+            <h2 class="section-title">
+                <span class="section-icon">▸</span> mis_cuentas<span class="cursor-blink">_</span>
+            </h2>
+        </div>
+
+        <div class="cuentas-grid ghost-enter ghost-enter-3">
+            @foreach (var cuenta in Banco.ClienteActual!.Cuentas)
+            {
+                <div class="cuenta-card glass-card @(IsSelected(cuenta) ? "cuenta-selected" : "")"
+                     @onclick="() => SeleccionarCuenta(cuenta)" id="cuenta-@cuenta.NumeroCuentaPublico">
+                    <!-- Card glow accent -->
+                    <div class="card-accent @GetAccentClass(cuenta)"></div>
+
+                    <div class="card-header">
+                        <span class="card-icon">@GetIcon(cuenta)</span>
+                        <span class="ghost-tag @GetTagClass(cuenta)">@GetTipo(cuenta)</span>
+                    </div>
+
+                    <div class="card-number">@cuenta.NumeroCuentaPublico</div>
+
+                    <div class="card-body">
+                        @if (cuenta is TarjetaCredito tc)
+                        {
+                            <div class="card-metric">
+                                <span class="metric-label">deuda</span>
+                                <span class="metric-value deuda">$@tc.Deuda.ToString("N0")</span>
+                            </div>
+                            <div class="card-metric">
+                                <span class="metric-label">cupo disp.</span>
+                                <span class="metric-value">$@tc.CupoDisponible.ToString("N0")</span>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="card-metric">
+                                <span class="metric-label">saldo</span>
+                                <span class="metric-value">$@cuenta.ConsultarSaldo().ToString("N0")</span>
+                            </div>
+                        }
+                    </div>
+
+                    <div class="card-status">
+                        <span class="status-dot @(cuenta.EstadoPublico == EstadoCuenta.ACTIVA ? "online" : "offline")"></span>
+                        <span class="status-text">@cuenta.EstadoPublico.ToString().ToLower()</span>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- ═══ Operaciones Panel ═══ -->
+        @if (_cuentaSeleccionada != null)
+        {
+            <div class="ops-section ghost-enter">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <span class="section-icon">▸</span> operaciones<span class="cursor-blink">_</span>
+                    </h2>
+                    <span class="ghost-tag ghost-tag-cyan">@_cuentaSeleccionada.NumeroCuentaPublico</span>
+                </div>
+
+                <!-- Tabs -->
+                <div class="ghost-tabs">
+                    @foreach (var tab in GetTabs())
+                    {
+                        <button class="ghost-tab @(_tabActiva == tab ? "active" : "")"
+                                @onclick="() => _tabActiva = tab" id="tab-@tab.ToLower().Replace(" ", "-")">
+                            <span class="tab-icon">@GetTabIcon(tab)</span>
+                            <span class="tab-text">@tab</span>
+                        </button>
+                    }
+                </div>
+
+                <!-- Alert -->
+                @if (!string.IsNullOrEmpty(_mensaje))
+                {
+                    <div class="ghost-alert @(_esError ? "ghost-alert-error" : "ghost-alert-success")">
+                        <span class="alert-icon">@(_esError ? "✗" : "✓")</span> @_mensaje
+                    </div>
+                }
+
+                <!-- Operations Panel -->
+                <div class="ops-panel glass-card">
+                    <div class="ops-form">
+                        @if (_tabActiva == "Consignar")
+                        {
+                            <div class="ghost-field">
+                                <label class="ghost-label">▸ monto a consignar</label>
+                                <input @bind="_monto" type="number" placeholder="0.00" class="ghost-input" id="input-monto-consignar" />
+                            </div>
+                            <button class="ghost-btn ghost-btn-primary" @onclick="Consignar" id="btn-consignar">
+                                ▶ Consignar
+                            </button>
+                        }
+                        else if (_tabActiva == "Retirar")
+                        {
+                            <div class="ghost-field">
+                                <label class="ghost-label">▸ monto a retirar</label>
+                                <input @bind="_monto" type="number" placeholder="0.00" class="ghost-input" id="input-monto-retirar" />
+                            </div>
+                            <button class="ghost-btn ghost-btn-primary" @onclick="Retirar" id="btn-retirar">
+                                ▶ Retirar
+                            </button>
+                        }
+                        else if (_tabActiva == "Transferir")
+                        {
+                            <div class="ghost-field">
+                                <label class="ghost-label">▸ cuenta destino</label>
+                                <input @bind="_cuentaDestino" type="text" placeholder="número de cuenta..." class="ghost-input" id="input-cuenta-destino" />
+                            </div>
+                            <div class="ghost-field">
+                                <label class="ghost-label">▸ monto</label>
+                                <input @bind="_monto" type="number" placeholder="0.00" class="ghost-input" id="input-monto-transferir" />
+                            </div>
+                            <button class="ghost-btn ghost-btn-primary" @onclick="Transferir" id="btn-transferir">
+                                ▶ Transferir
+                            </button>
+                        }
+                        else if (_tabActiva == "Comprar" && _cuentaSeleccionada is TarjetaCredito)
+                        {
+                            <div class="ghost-field">
+                                <label class="ghost-label">▸ monto de compra</label>
+                                <input @bind="_monto" type="number" placeholder="0.00" class="ghost-input" id="input-monto-comprar" />
+                            </div>
+                            <div class="ghost-field">
+                                <label class="ghost-label">▸ número de cuotas</label>
+                                <input @bind="_cuotas" type="number" placeholder="1" class="ghost-input" id="input-cuotas" />
+                            </div>
+                            <button class="ghost-btn ghost-btn-primary" @onclick="Comprar" id="btn-comprar">
+                                ▶ Comprar
+                            </button>
+                        }
+                        else if (_tabActiva == "Pagar TC" && _cuentaSeleccionada is TarjetaCredito)
+                        {
+                            <div class="ghost-field">
+                                <label class="ghost-label">▸ monto a pagar</label>
+                                <input @bind="_monto" type="number" placeholder="0.00" class="ghost-input" id="input-monto-pagar" />
+                            </div>
+                            <button class="ghost-btn ghost-btn-primary" @onclick="PagarTC" id="btn-pagar">
+                                ▶ Pagar
+                            </button>
+                        }
+                        else if (_tabActiva == "Intereses" && _cuentaSeleccionada is CuentaAhorros ca)
+                        {
+                            <div class="interest-preview">
+                                <span class="interest-label">interés disponible</span>
+                                <span class="interest-value">$@ca.CalcularIntereses().ToString("N0")</span>
+                                <span class="interest-rate">tasa: @ca.TasaInteres.ToString("P1")</span>
+                            </div>
+                            <button class="ghost-btn ghost-btn-primary" @onclick="AplicarIntereses" id="btn-intereses">
+                                ▶ Aplicar Intereses
+                            </button>
+                        }
+                        else if (_tabActiva == "Movimientos")
+                        {
+                            <div class="movimientos-container">
+                                @if (!_cuentaSeleccionada.ObtenerMovimientos().Any())
+                                {
+                                    <div class="empty-state">
+                                        <span class="empty-icon">📋</span>
+                                        <p class="empty-text">sin movimientos registrados</p>
+                                    </div>
+                                }
+                                @foreach (var m in _cuentaSeleccionada.ObtenerMovimientos().AsEnumerable().Reverse())
+                                {
+                                    <div class="mov-row">
+                                        <div class="mov-left">
+                                            <span class="ghost-tag @GetMovTagClass(m.Tipo)">@GetMovLabel(m.Tipo)</span>
+                                            <span class="mov-desc">@m.Descripcion</span>
+                                        </div>
+                                        <div class="mov-right">
+                                            <span class="mov-amount @(IsIngreso(m.Tipo) ? "amount-in" : "amount-out")">
+                                                @(IsIngreso(m.Tipo) ? "+" : "-")$@m.Valor.ToString("N0")
+                                            </span>
+                                            <span class="mov-date">@m.FechaHora.ToString("dd/MM HH:mm")</span>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<style>
+    /* ═══ Dashboard Layout ═══ */
+    .ghost-dashboard {
+        min-height: 100vh;
+        background: var(--gradient-dark);
+    }
+
+    /* ═══ Top Bar ═══ */
+    .ghost-topbar {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem 2rem;
+        background: rgba(10, 11, 16, 0.85);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-bottom: 1px solid var(--border-ghost);
+    }
+
+    .topbar-left {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        font-family: var(--font-mono);
+    }
+
+    .topbar-logo {
+        font-size: 1.3rem;
+        filter: drop-shadow(0 0 8px rgba(94, 234, 212, 0.4));
+    }
+
+    .topbar-brand {
+        font-weight: 700;
+        font-size: 1.1rem;
+        background: var(--gradient-main);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .topbar-separator {
+        color: var(--text-muted);
+        font-weight: 200;
+    }
+
+    .topbar-path {
+        font-family: var(--font-mono);
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        border-right: 2px solid var(--accent-cyan);
+        animation: ghostType 1.5s steps(15) forwards, ghostBlink 0.8s step-end infinite;
+    }
+
+    .topbar-right {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .user-badge {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.4rem 0.8rem;
+        border: 1px solid var(--border-ghost);
+        border-radius: var(--radius-md);
+        font-family: var(--font-mono);
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+    }
+
+    .user-avatar { font-size: 1.1rem; }
+
+    .ghost-btn-icon {
+        background: transparent;
+        border: 1px solid var(--border-ghost);
+        color: var(--text-muted);
+        width: 36px;
+        height: 36px;
+        border-radius: var(--radius-sm);
+        cursor: pointer;
+        font-size: 1rem;
+        transition: var(--transition-smooth);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .ghost-btn-icon:hover {
+        border-color: var(--accent-red);
+        color: var(--accent-red);
+        box-shadow: 0 0 12px rgba(248, 113, 113, 0.2);
+    }
+
+    /* ═══ Content ═══ */
+    .ghost-content {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem 1.5rem;
+    }
+
+    /* ═══ Welcome Banner ═══ */
+    .welcome-banner {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1.8rem 2rem;
+        background: var(--gradient-card);
+        border: 1px solid var(--border-ghost);
+        border-radius: var(--radius-lg);
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .welcome-banner::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(94, 234, 212, 0.3), transparent);
+    }
+
+    .welcome-stats {
+        display: flex;
+        gap: 2rem;
+    }
+
+    .stat-item {
+        text-align: center;
+        font-family: var(--font-mono);
+    }
+
+    .stat-value {
+        display: block;
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: var(--accent-cyan);
+    }
+
+    .stat-label {
+        display: block;
+        font-size: 0.65rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        margin-top: 0.2rem;
+    }
+
+    /* ═══ Section Header ═══ */
+    .section-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+    }
+
+    .section-title {
+        font-family: var(--font-mono);
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--text-secondary);
+    }
+
+    .section-icon { color: var(--accent-cyan); }
+
+    .cursor-blink {
+        animation: ghostBlink 1s step-end infinite;
+        color: var(--accent-cyan);
+    }
+
+    /* ═══ Cuentas Grid ═══ */
+    .cuentas-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2.5rem;
+    }
+
+    .cuenta-card {
+        padding: 1.5rem;
+        cursor: pointer;
+        transition: var(--transition-smooth);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .cuenta-card:hover {
+        transform: translateY(-3px);
+        box-shadow: var(--shadow-lg), var(--shadow-glow);
+        border-color: var(--border-glow);
+    }
+
+    .cuenta-selected {
+        border-color: var(--accent-cyan) !important;
+        box-shadow: var(--shadow-lg), 0 0 30px rgba(94, 234, 212, 0.1);
+    }
+
+    .card-accent {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+    }
+
+    .card-accent.accent-cyan { background: linear-gradient(90deg, var(--accent-cyan), var(--accent-blue)); }
+    .card-accent.accent-blue { background: linear-gradient(90deg, var(--accent-blue), var(--accent-purple)); }
+    .card-accent.accent-purple { background: linear-gradient(90deg, var(--accent-purple), var(--accent-amber)); }
+
+    .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.8rem;
+    }
+
+    .card-icon { font-size: 1.6rem; }
+
+    .card-number {
+        font-family: var(--font-mono);
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        letter-spacing: 1.5px;
+        margin-bottom: 1rem;
+    }
+
+    .card-body {
+        display: flex;
+        gap: 1.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .card-metric { display: flex; flex-direction: column; }
+
+    .metric-label {
+        font-family: var(--font-mono);
+        font-size: 0.65rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        margin-bottom: 0.2rem;
+    }
+
+    .metric-value {
+        font-family: var(--font-mono);
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: var(--accent-cyan);
+    }
+
+    .metric-value.deuda { color: var(--accent-red); }
+
+    .card-status {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        font-family: var(--font-mono);
+        font-size: 0.7rem;
+        color: var(--text-muted);
+    }
+
+    .status-dot { width: 6px; height: 6px; border-radius: 50%; }
+    .status-dot.online {
+        background: var(--accent-green);
+        box-shadow: 0 0 8px rgba(52, 211, 153, 0.5);
+        animation: pulse 2s ease-in-out infinite;
+    }
+    .status-dot.offline { background: var(--accent-red); }
+
+    /* ═══ Ops Section ═══ */
+    .ops-section { margin-bottom: 2rem; }
+
+    /* ═══ Tabs ═══ */
+    .ghost-tabs {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        margin-bottom: 1.2rem;
+    }
+
+    .ghost-tab {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.5rem 1rem;
+        border: 1px solid var(--border-ghost);
+        background: transparent;
+        border-radius: 20px;
+        cursor: pointer;
+        font-family: var(--font-mono);
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        transition: var(--transition-smooth);
+    }
+
+    .ghost-tab:hover {
+        border-color: rgba(94, 234, 212, 0.3);
+        color: var(--text-secondary);
+    }
+
+    .ghost-tab.active {
+        background: rgba(94, 234, 212, 0.08);
+        border-color: var(--accent-cyan);
+        color: var(--accent-cyan);
+        box-shadow: 0 0 12px rgba(94, 234, 212, 0.1);
+    }
+
+    .tab-icon { font-size: 0.9rem; }
+
+    /* ═══ Operations Panel ═══ */
+    .ops-panel { padding: 1.8rem; }
+
+    .ops-form {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        max-width: 450px;
+    }
+
+    .ghost-field { display: flex; flex-direction: column; }
+
+    /* Interest Preview */
+    .interest-preview {
+        text-align: center;
+        padding: 1.5rem;
+        background: rgba(94, 234, 212, 0.03);
+        border: 1px solid rgba(94, 234, 212, 0.1);
+        border-radius: var(--radius-md);
+        font-family: var(--font-mono);
+    }
+
+    .interest-label {
+        display: block;
+        font-size: 0.7rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        margin-bottom: 0.4rem;
+    }
+
+    .interest-value {
+        display: block;
+        font-size: 1.6rem;
+        font-weight: 700;
+        color: var(--accent-green);
+    }
+
+    .interest-rate {
+        display: block;
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        margin-top: 0.3rem;
+    }
+
+    /* ═══ Movimientos ═══ */
+    .movimientos-container {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        max-height: 450px;
+        overflow-y: auto;
+        max-width: 100%;
+        width: 100%;
+    }
+
+    .mov-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.85rem 1rem;
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid var(--border-ghost);
+        border-radius: var(--radius-md);
+        transition: var(--transition-fast);
+    }
+
+    .mov-row:hover {
+        background: rgba(94, 234, 212, 0.02);
+        border-color: var(--border-glow);
+    }
+
+    .mov-left {
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+        flex: 1;
+        min-width: 0;
+    }
+
+    .mov-desc {
+        font-family: var(--font-mono);
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .mov-right {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 0.15rem;
+        flex-shrink: 0;
+    }
+
+    .mov-amount {
+        font-family: var(--font-mono);
+        font-size: 0.9rem;
+        font-weight: 700;
+    }
+
+    .amount-in { color: var(--accent-green); }
+    .amount-out { color: var(--accent-red); }
+
+    .mov-date {
+        font-family: var(--font-mono);
+        font-size: 0.65rem;
+        color: var(--text-muted);
+    }
+
+    /* Empty state */
+    .empty-state {
+        text-align: center;
+        padding: 3rem 1rem;
+    }
+
+    .empty-icon {
+        font-size: 2.5rem;
+        display: block;
+        margin-bottom: 0.8rem;
+        opacity: 0.4;
+    }
+
+    .empty-text {
+        font-family: var(--font-mono);
+        color: var(--text-muted);
+        font-size: 0.85rem;
+    }
+
+    /* ═══ Responsive ═══ */
+    @@media (max-width: 768px) {
+        .ghost-topbar { padding: 0.75rem 1rem; }
+        .topbar-path { display: none; }
+        .topbar-separator { display: none; }
+        .user-name { display: none; }
+        .ghost-content { padding: 1.5rem 1rem; }
+        .welcome-banner {
+            flex-direction: column;
+            gap: 1rem;
+            text-align: center;
+        }
+        .cuentas-grid { grid-template-columns: 1fr; }
+        .ops-form { max-width: 100%; }
+    }
+</style>
+
+@code {
+    private Cuenta? _cuentaSeleccionada;
+    private string _tabActiva = "Movimientos";
+    private decimal _monto;
+    private string _cuentaDestino = "";
+    private int _cuotas = 1;
+    private string _mensaje = "";
+    private bool _esError;
+
+    private void SeleccionarCuenta(Cuenta c)
+    {
+        _cuentaSeleccionada = c;
+        _mensaje = "";
+        _tabActiva = "Movimientos";
+    }
+
+    private bool IsSelected(Cuenta c) => _cuentaSeleccionada == c;
+
+    private string GetTotalBalance() =>
+        Banco.ClienteActual!.Cuentas
+            .Where(c => c is not TarjetaCredito)
+            .Sum(c => c.ConsultarSaldo())
+            .ToString("N0");
+
+    private List<string> GetTabs()
+    {
+        var tabs = new List<string> { "Consignar", "Retirar", "Transferir", "Movimientos" };
+        if (_cuentaSeleccionada is CuentaAhorros) tabs.Insert(3, "Intereses");
+        if (_cuentaSeleccionada is TarjetaCredito) { tabs = new() { "Comprar", "Pagar TC", "Movimientos" }; }
+        return tabs;
+    }
+
+    private string GetTabIcon(string tab) => tab switch
+    {
+        "Consignar" => "💰",
+        "Retirar" => "💸",
+        "Transferir" => "🔄",
+        "Movimientos" => "📋",
+        "Intereses" => "📈",
+        "Comprar" => "🛒",
+        "Pagar TC" => "💳",
+        _ => "▸"
+    };
+
+    private void Run(Action op)
+    {
+        _mensaje = "";
+        try { op(); _esError = false; _mensaje = "Operación exitosa ✓"; }
+        catch (Exception ex) { _esError = true; _mensaje = ex.Message; }
+        _monto = 0;
+    }
+
+    private void Consignar() => Run(() => _cuentaSeleccionada!.Consignar(_monto));
+    private void Retirar() => Run(() => _cuentaSeleccionada!.Retirar(_monto));
+    private void AplicarIntereses() => Run(() => ((CuentaAhorros)_cuentaSeleccionada!).AplicarIntereses());
+    private void Comprar() => Run(() => ((TarjetaCredito)_cuentaSeleccionada!).Comprar(_monto, _cuotas));
+    private void PagarTC() => Run(() => ((TarjetaCredito)_cuentaSeleccionada!).Pagar(_monto));
+
+    private void Transferir() => Run(() =>
+    {
+        var destino = Banco.ClienteActual!.Cuentas.FirstOrDefault(c => c.NumeroCuentaPublico == _cuentaDestino)
+            ?? throw new InvalidOperationException("Cuenta destino no encontrada.");
+        _cuentaSeleccionada!.Transferir(destino, _monto);
+    });
+
+    private string GetAccentClass(Cuenta c) => c switch
+    {
+        CuentaAhorros => "accent-cyan",
+        CuentaCorriente => "accent-blue",
+        TarjetaCredito => "accent-purple",
+        _ => "accent-cyan"
+    };
+
+    private string GetTagClass(Cuenta c) => c switch
+    {
+        CuentaAhorros => "ghost-tag-cyan",
+        CuentaCorriente => "ghost-tag-blue",
+        TarjetaCredito => "ghost-tag-purple",
+        _ => "ghost-tag-cyan"
+    };
+
+    private string GetIcon(Cuenta c) => c switch
+    {
+        CuentaAhorros => "💰",
+        CuentaCorriente => "🏦",
+        TarjetaCredito => "💳",
+        _ => "💵"
+    };
+
+    private string GetTipo(Cuenta c) => c switch
+    {
+        CuentaAhorros => "Ahorros",
+        CuentaCorriente => "Corriente",
+        TarjetaCredito => "Tarjeta",
+        _ => ""
+    };
+
+    private string GetMovTagClass(TipoMovimiento t) => IsIngreso(t) ? "ghost-tag-green" : "ghost-tag-red";
+
+    private string GetMovLabel(TipoMovimiento t) => t switch
+    {
+        TipoMovimiento.CONSIGNACION => "IN",
+        TipoMovimiento.RETIRO => "OUT",
+        TipoMovimiento.TRANSFERENCIA_OUT => "T.OUT",
+        TipoMovimiento.TRANSFERENCIA_IN => "T.IN",
+        TipoMovimiento.COMPRA_TC => "BUY",
+        TipoMovimiento.PAGO_TC => "PAY",
+        _ => t.ToString()
+    };
+
+    private bool IsIngreso(TipoMovimiento t) =>
+        t is TipoMovimiento.CONSIGNACION or TipoMovimiento.TRANSFERENCIA_IN or TipoMovimiento.PAGO_TC;
+
+    private void Logout() { Banco.Logout(); Nav.NavigateTo("/"); }
+}

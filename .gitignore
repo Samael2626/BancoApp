@@ -1,0 +1,32 @@
+# Build results
+bin/
+obj/
+.vs/
+.vscode/
+
+# Visual Studio cache/options
+.vs/
+*.user
+*.suo
+*.ncb
+*.sln.docstates
+
+# Build folders
+Debug/
+Release/
+
+# NuGet
+*.nupkg
+*.snupkg
+*.lock.json
+
+# Rider
+.idea/
+*.sln.iml
+
+# Local env files
+.env
+.env.local
+
+# Agent files
+.agents/
